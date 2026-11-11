@@ -1,5 +1,5 @@
 ---
-description: Studiequiz for et vilkårligt fag. Claude laver en ny statisk HTML-quiz (10 spørgsmål) pr. batch, svar tjekkes i browseren, out of scope huskes, næste batch N min efter færdig. Ingen installation, virker på Windows og Mac.
+description: Studiequiz for et vilkårligt fag. Løbende eller én quiz nu, valgfrit antal spørgsmål og interval. Claude laver en ny statisk HTML-quiz pr. batch, svar tjekkes i browseren, out of scope huskes, næste batch N min efter færdig. Ingen installation, virker på Windows og Mac.
 argument-hint: <fag> [læringsmål og emner…]  |  stop <fag>  |  list
 ---
 
@@ -12,33 +12,40 @@ How it works: each subject has a folder with a fixed `quiz.html`, which loads `q
 Folders: `~/tools/quiz/_template/` (the template) and `~/tools/quiz/<slug>/` (per subject). Use `$HOME` and never hardcode a username.
 
 ## Bootstrap (ALWAYS first)
-Template version: **21784464**
-1. If `~/tools/quiz/_template/VERSION` does not contain `21784464`: write the 3 files from the **Appendix** byte for byte (Write tool, exact content between the `~~~~` fences) to `~/tools/quiz/_template/`, then write `21784464` to `VERSION`.
+Template version: **e105ebc3**
+1. If `~/tools/quiz/_template/VERSION` does not contain `e105ebc3`: write the 3 files from the **Appendix** byte for byte (Write tool, exact content between the `~~~~` fences) to `~/tools/quiz/_template/`, then write `e105ebc3` to `VERSION`.
 2. Existing subject folders with an older `quiz.html`/`open.sh`/`wait.sh`: copy the new ones over them. NEVER touch `config.json`, `goals.md`, `state.json`, `questions*.js` or `results/`.
 
 ## Arguments
 - `list`: for each folder under `~/tools/quiz/` (except `_template`): title, number of batches, hit rate from `state.json.history`, out-of-scope count. Stop.
 - `stop <subject>`: TaskStop this session's background tasks for the subject (TaskList). Stop.
-- Otherwise: first word = subject name → `slug` (lowercase, hyphens). The rest = learning goals, topics, wishes.
+- Otherwise: first word = subject name → `slug` (lowercase, hyphens). The rest = learning goals, topics, wishes, and possibly settings ("én quiz", "15 spørgsmål", "hver 10. min").
 
 ## New subject (folder does not exist)
 1. If no learning goals came with the command: ask in plain text, END the turn and wait. Don't guess. Ask for:
    - **Læringsmål** (paste them directly)
    - **Fokusemner** (optional)
-   - **Ønsker** (optional: number of questions (10), pause after a finished batch (5 min), language (Danish with English technical terms), share of "for dummies" questions (~1/3))
-   Use the defaults for whatever isn't answered.
+   - **Ønsker** (optional: language (Danish with English technical terms), share of "for dummies" questions (~1/3))
 2. Create the folder and copy `quiz.html`, `open.sh` and `wait.sh` from `_template`.
-3. `config.json`: `{"title": "...", "slug": "...", "questions_per_batch": 10, "delay_minutes": 5, "language": "Dansk med engelske fagtermer", "focus_topics": [], "wishes": [], "downloads_dir": "~/Downloads"}`
+3. `config.json`: `{"title": "...", "slug": "...", "mode": "loop", "questions_per_batch": 10, "delay_minutes": 5, "language": "Dansk med engelske fagtermer", "focus_topics": [], "wishes": [], "downloads_dir": "~/Downloads"}`
 4. `goals.md`: the learning goals verbatim. `state.json`: `{"history": [], "out_of_scope": [], "batches": 0}`.
-5. On first-time setup: tell the user in one line that the result file ends up in Downloads, and that the browser must not be set to "ask where to save" (otherwise a save dialog appears per batch).
+5. On first-time setup: tell the user in one line that the result file ends up in Downloads, and that the browser must not be set to "ask where to save" (otherwise a save dialog appears per quiz).
+6. Continue to **Session settings**.
 
 ## Existing subject
-New goals or wishes in the arguments → update `goals.md`/`config.json`. If `results/b<N>.json` is missing for the current batch N (from `questions.js`), the batch is unfinished: open it and start the waiter (event loop step 1). Otherwise generate the next one.
+New goals or wishes in the arguments → update `goals.md`/`config.json`. If `results/b<N>.json` is missing for the current batch N (from `questions.js`), the batch is unfinished: open it and start the waiter (event loop step 1), and skip Session settings. Otherwise continue to **Session settings**.
+
+## Session settings (asked EVERY time a new quiz is started)
+Ask with ONE AskUserQuestion call containing the questions below. Skip any question the arguments already answer clearly. Mark the value from `config.json` as "(Recommended)" / the first option, so a single click repeats last time's choice:
+- **Type** (header "Type"): "Løbende quizzer" (a new quiz N min after each finished one) / "Én quiz nu" (one quiz, then stop).
+- **Antal** (header "Antal"): number of questions: 5 / 10 / 15 / 20.
+- **Interval** (header "Interval"), ONLY if Type = loop, or ask together and ignore it on "Én quiz nu": pause after a finished quiz: 2 / 5 / 10 / 15 min.
+Save the choices in `config.json` (`mode`: `"loop"` | `"once"`, `questions_per_batch`, `delay_minutes`), so they become the default next time. Then generate the batch and open it.
 
 ## Generate a batch → `questions.js` (or `questions.next.js` while waiting)
 Read `config.json`, `goals.md` and `state.json` first. The file is JavaScript:
 ```js
-window.QUIZ = {"slug": "...", "title": "...", "batch_id": 5, "delay_minutes": 5,
+window.QUIZ = {"slug": "...", "title": "...", "batch_id": 5, "mode": "loop|once", "delay_minutes": 5,
   "note": "optional: short status, e.g. 'Sidst 7/9. Fokus nu: topic exchange, Saga.'",
   "out_of_scope": [/* copy of state.out_of_scope, so the user can undo */],
   "questions": [{"id": "b5q1", "topic": "...", "goal": "short learning goal", "type": "single|multi",
@@ -59,10 +66,9 @@ Rules:
 2. When the waiter exits with `RESULT <path>`: read the result file `{answers:[{qid,topic,chosen,correct}], out_of_scope:[{qid,topic,question,scope}], unoos:[indices]}`:
    - Remove `state.out_of_scope[i]` for every i in `unoos` (the indices refer to the list that was in that batch's `questions.js`). Then append the new `out_of_scope` entries.
    - Append `answers` to `state.history` with `batch_id`. Set `batches = N`.
-   - Write the next batch to `questions.next.js` NOW.
-   - Start ONE background command: `cd <dir> && sleep <delay_minutes*60> && mv questions.next.js questions.js && bash open.sh && bash wait.sh <N+1>`
-   - Give the user a short status: score, weak topics, what the next batch focuses on.
-3. Runs as long as the Claude session is open. `/quiz <subject>` in a new session resumes.
+   - **mode = "once":** STOP here. Give a short status (score, weak topics) and say that `/quiz <subject>` starts a new one, which will take this result into account.
+   - **mode = "loop":** write the next batch to `questions.next.js` NOW, then start ONE background command: `cd <dir> && sleep <delay_minutes*60> && mv questions.next.js questions.js && bash open.sh && bash wait.sh <N+1>`. Give the user a short status: score, weak topics, what the next batch focuses on.
+3. The loop runs as long as the Claude session is open. `/quiz <subject>` in a new session resumes.
 
 ---
 
@@ -238,7 +244,7 @@ function maybeSummary() {
     <div class="score">${right} / ${answered.length}</div>
     <div>${answered.length && right === answered.length ? "Flot." : "Forkerte emner kommer igen i ny form."}</div>
     <div class="row" style="justify-content:center"><button class="primary" id="finish">Færdig: gem resultat og luk</button></div>
-    <div class="hint" style="margin-top:8px">Resultatet gemmes i din Overførsler-mappe. Næste batch åbner ${Q.delay_minutes ?? 5} min efter.</div>`;
+    <div class="hint" style="margin-top:8px">Resultatet gemmes i din Overførsler-mappe. ${Q.mode === "once" ? "Næste quiz tager højde for dine svar." : `Næste batch åbner ${Q.delay_minutes ?? 5} min efter.`}</div>`;
   document.getElementById("finish").onclick = finish;
   sum.scrollIntoView({ behavior: "smooth" });
 }

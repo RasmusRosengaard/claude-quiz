@@ -1,6 +1,6 @@
 {
   "name": "quiz",
   "description": "Studiequiz for et vilkårligt fag: ny statisk HTML-quiz pr. batch, svar tjekkes i browseren, out of scope huskes, næste batch efter en pause. Windows og Mac, ingen installation.",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "author": { "name": "RasmusRosengaard" }
 }
