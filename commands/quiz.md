@@ -12,8 +12,8 @@ How it works: each subject has a folder with a fixed `quiz.html`, which loads `q
 Folders: `~/tools/quiz/_template/` (the template) and `~/tools/quiz/<slug>/` (per subject). Use `$HOME` and never hardcode a username.
 
 ## Bootstrap (ALWAYS first)
-Template version: **e105ebc3**
-1. If `~/tools/quiz/_template/VERSION` does not contain `e105ebc3`: write the 3 files from the **Appendix** byte for byte (Write tool, exact content between the `~~~~` fences) to `~/tools/quiz/_template/`, then write `e105ebc3` to `VERSION`.
+Template version: **c06287d2**
+1. If `~/tools/quiz/_template/VERSION` does not contain `c06287d2`: write the 3 files from the **Appendix** byte for byte (Write tool, exact content between the `~~~~` fences) to `~/tools/quiz/_template/`, then write `c06287d2` to `VERSION`.
 2. Existing subject folders with an older `quiz.html`/`open.sh`/`wait.sh`: copy the new ones over them. NEVER touch `config.json`, `goals.md`, `state.json`, `questions*.js` or `results/`.
 
 ## Arguments
@@ -309,7 +309,7 @@ if (Q) {
 ~~~~bash
 #!/usr/bin/env bash
 # Opens quiz.html in this folder as a focused app window (Chrome/Edge/Brave), otherwise in the default browser.
-DIR="$(cd "$(dirname "$0")" && pwd)"
+DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 case "$(uname -s)" in
   Darwin)
     URL="file://$DIR/quiz.html"
@@ -347,8 +347,8 @@ echo opened
 #!/usr/bin/env bash
 # Usage: wait.sh <batch_id>
 # Waits until the browser has downloaded quiz-<slug>-b<N>.json, moves it to results/, and prints "RESULT <path>".
-DIR="$(cd "$(dirname "$0")" && pwd)"
-N="$1"
+DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+N="${1}"
 SLUG="$(sed -n 's/.*"slug"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' "$DIR/config.json" | head -1)"
 DL="$(sed -n 's/.*"downloads_dir"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' "$DIR/config.json" | head -1)"
 DL="${DL:-$HOME/Downloads}"
