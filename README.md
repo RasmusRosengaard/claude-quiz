@@ -25,6 +25,6 @@ curl -o ~/.claude/commands/quiz.md https://raw.githubusercontent.com/RasmusRosen
 ```
 /quiz databaser
 ```
-Hvis faget er nyt, spørger Claude efter læringsmål, fokusemner og ønsker (antal spørgsmål, pause, sprog). `/quiz list` viser alle fag, og `/quiz stop <fag>` stopper en quiz.
+Hvis faget er nyt, spørger Claude efter læringsmål, fokusemner, ønsker og (valgfrit) undervisningsmateriale: PowerPoints, PDF'er, Word-filer, mapper, links eller bare bognavne. Materialet læses én gang og opsummeres, så hver quiz forbliver billig. Ved hver start vælger du løbende quizzer eller én quiz nu, antal spørgsmål og interval. `/quiz list` viser alle fag, og `/quiz stop <fag>` stopper en quiz.
 
 Data for hvert fag ligger i `~/tools/quiz/<fag>/`. Resultatfilerne downloades midlertidigt til `~/Downloads`. Browseren må derfor ikke være sat til "Spørg, hvor filer skal gemmes".

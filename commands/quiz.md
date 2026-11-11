@@ -26,14 +26,28 @@ Template version: **e105ebc3**
    - **Læringsmål** (paste them directly)
    - **Fokusemner** (optional)
    - **Ønsker** (optional: language (Danish with English technical terms), share of "for dummies" questions (~1/3))
+   - **Undervisningsmateriale** (optional): paths to files or folders (PowerPoint `.pptx`, `.pdf`, `.docx`, `.md`/`.txt`), links, or just **names of books** (title + author, e.g. "Enterprise Integration Patterns – Hohpe & Woolf")
 2. Create the folder and copy `quiz.html`, `open.sh` and `wait.sh` from `_template`.
-3. `config.json`: `{"title": "...", "slug": "...", "mode": "loop", "questions_per_batch": 10, "delay_minutes": 5, "language": "Dansk med engelske fagtermer", "focus_topics": [], "wishes": [], "downloads_dir": "~/Downloads"}`
+3. `config.json`: `{"title": "...", "slug": "...", "mode": "loop", "questions_per_batch": 10, "delay_minutes": 5, "language": "Dansk med engelske fagtermer", "focus_topics": [], "wishes": [], "materials": [], "downloads_dir": "~/Downloads"}`
 4. `goals.md`: the learning goals verbatim. `state.json`: `{"history": [], "out_of_scope": [], "batches": 0}`.
-5. On first-time setup: tell the user in one line that the result file ends up in Downloads, and that the browser must not be set to "ask where to save" (otherwise a save dialog appears per quiz).
-6. Continue to **Session settings**.
+5. If material was given: see **Materials** below.
+6. On first-time setup: tell the user in one line that the result file ends up in Downloads, and that the browser must not be set to "ask where to save" (otherwise a save dialog appears per quiz).
+7. Continue to **Session settings**.
+
+## Materials (optional)
+`config.materials` = a list of `{"type": "file"|"folder"|"url"|"book", "ref": "<path, URL or 'Title – Author'>", "label": "short name, e.g. 'Slides uge 3'", "digested": false}`. Store absolute paths, and do NOT copy the files.
+Material is read ONCE and condensed into `materials.md`, so batches stay cheap. For each entry with `digested: false`:
+- **pdf:** the Read tool (use `pages` for >10 pages, read in chunks of up to 20 pages).
+- **pptx/docx:** these are zip files. Extract the text per slide in numeric order and strip the XML tags:
+  `for s in $(unzip -Z1 "<file>" | grep -E '^ppt/slides/slide[0-9]+\.xml$' | sort -V); do echo "--- $s"; unzip -p "<file>" "$s" | sed -e 's/<[^>]*>/ /g' | tr -s ' '; done`
+  docx: `unzip -p "<file>" word/document.xml | sed -e 's/<[^>]*>/ /g' | tr -s ' '`. Use Read if the material is an image or a scanned PDF.
+- **folder:** process the supported files in it (not recursively in big trees: ask if there are >30 files).
+- **url:** fetch it if a web tool is available. Otherwise ask the user to download it as a file.
+- **book (name only):** don't fetch anything. Use your own knowledge of the book (central concepts, chapter themes, terminology). If you don't know the book well, say so to the user, and use only the title as a pointer to the topic. Never make up page numbers or quotes.
+Append to `materials.md` a section per source: `## <label>` with the key concepts, definitions, terms, examples and typical exam topics, compressed (about 1–3 KB per source). Then set `digested: true`. If a file can't be read, tell the user and skip it.
 
 ## Existing subject
-New goals or wishes in the arguments → update `goals.md`/`config.json`. If `results/b<N>.json` is missing for the current batch N (from `questions.js`), the batch is unfinished: open it and start the waiter (event loop step 1), and skip Session settings. Otherwise continue to **Session settings**.
+New goals, wishes or material in the arguments (e.g. "tilføj materiale ~/Downloads/uge4.pptx" or "fjern bogen X") → update `goals.md`/`config.json`/`materials.md` (digest only the new material). If `results/b<N>.json` is missing for the current batch N (from `questions.js`), the batch is unfinished: open it and start the waiter (event loop step 1), and skip Session settings. Otherwise continue to **Session settings**.
 
 ## Session settings (asked EVERY time a new quiz is started)
 Ask with ONE AskUserQuestion call containing the questions below. Skip any question the arguments already answer clearly. Mark the value from `config.json` as "(Recommended)" / the first option, so a single click repeats last time's choice:
@@ -43,7 +57,7 @@ Ask with ONE AskUserQuestion call containing the questions below. Skip any quest
 Save the choices in `config.json` (`mode`: `"loop"` | `"once"`, `questions_per_batch`, `delay_minutes`), so they become the default next time. Then generate the batch and open it.
 
 ## Generate a batch → `questions.js` (or `questions.next.js` while waiting)
-Read `config.json`, `goals.md` and `state.json` first. The file is JavaScript:
+Read `config.json`, `goals.md`, `state.json` and (if it exists) `materials.md` first. Do NOT reread the original material files per batch. The file is JavaScript:
 ```js
 window.QUIZ = {"slug": "...", "title": "...", "batch_id": 5, "mode": "loop|once", "delay_minutes": 5,
   "note": "optional: short status, e.g. 'Sidst 7/9. Fokus nu: topic exchange, Saga.'",
@@ -56,6 +70,7 @@ Rules:
 - `questions_per_batch` questions, only `single`/`multi`. `correct` = exact indices into `options`. Vary the position of the correct answer (the page also shuffles).
 - **"For dummies":** ~1/3 (3–4 of 10) very simple basic questions, one concept each ("Hvad er en X?"), placed first. The rest are concrete scenario questions.
 - The language from config. Technical terms in English.
+- With material: base a large share of the questions on `materials.md` (the course's own terminology and examples), and end the `explanation` with `Kilde: <label>` (e.g. "Kilde: Slides uge 3" or "Kilde: EIP-bogen"). Learning goals still determine WHAT is covered; the material determines HOW it is phrased.
 - Cover the learning goals broadly. Weight `focus_topics`/`wishes`. Topics answered wrong (`history.correct == false`) come back first.
 - Questions MAY come back, but never word for word: rephrase, new scenario, or another aspect.
 - `out_of_scope`: `scope: "topic"` → never that topic again. `scope: "question"` → not that question or close variants of it.
