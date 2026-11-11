@@ -28,3 +28,18 @@ curl -o ~/.claude/commands/quiz.md https://raw.githubusercontent.com/RasmusRosen
 Hvis faget er nyt, spørger Claude efter læringsmål, fokusemner, ønsker og (valgfrit) undervisningsmateriale: PowerPoints, PDF'er, Word-filer, mapper, links eller bare bognavne. Materialet læses én gang og opsummeres, så hver quiz forbliver billig. Ved hver start vælger du løbende quizzer eller én quiz nu, antal spørgsmål og interval. `/quiz list` viser alle fag, og `/quiz stop <fag>` stopper en quiz.
 
 Data for hvert fag ligger i `~/tools/quiz/<fag>/`. Resultatfilerne downloades midlertidigt til `~/Downloads`. Browseren må derfor ikke være sat til "Spørg, hvor filer skal gemmes".
+
+## itslearning (valgfrit)
+Plugin'et indeholder også skillen **itslearning**. Den henter materiale og lektier fra dine itslearning-planer via [Claude in Chrome](https://claude.com/chrome), med dit eget login:
+```
+Hent materialet fra itslearning til min quiz
+```
+Du vælger gruppe (fx "SWOF26 + SWVF26"), fanen *Tidligere* og/eller *Aktuelle*, og hvilke fag (fx "Systemintegration" og "Store Systemer"). Skillen henter:
+- planernes **forberedelse/lektier**, samlet i `lektier.md`
+- filer
+- Google Slides (som PDF)
+- links
+
+Bogkapitler fra lektierne bliver til tomme pladsholder-filer. Hvis du vil, lægger den alt i en mappe på skrivebordet. Derefter laver `/quiz` spørgsmål ud fra materialet og lektierne, koblet til læringsmålene.
+
+Krav: Chrome med Claude in Chrome-udvidelsen, og at du er logget ind på itslearning.

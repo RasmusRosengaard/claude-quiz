@@ -44,6 +44,9 @@ Material is read ONCE and condensed into `materials.md`, so batches stay cheap. 
 - **folder:** process the supported files in it (not recursively in big trees: ask if there are >30 files).
 - **url:** fetch it if a web tool is available. Otherwise ask the user to download it as a file.
 - **book (name only):** don't fetch anything. Use your own knowledge of the book (central concepts, chapter themes, terminology). If you don't know the book well, say so to the user, and use only the title as a pointer to the topic. Never make up page numbers or quotes.
+**Material folder on the desktop (optional):** when material is given, ask (AskUserQuestion, header "Mappe") "Lav en mappe på skrivebordet med alt materialet?" Ja/Nej. On Ja: create `<Desktop>/<Fagnavn> – materiale/` (Windows: `powershell -NoProfile -Command "[Environment]::GetFolderPath('Desktop')"`, since it may be in OneDrive; macOS: `~/Desktop`). Copy the given files and folders into it. For each book chapter, create an EMPTY placeholder file `Bøger/<Bogtitel> – kap. <N> <kapiteltitel>.txt` (for a book without a chapter: `Bøger/<Bogtitel>.txt`). Links go in `links.md`. Then point `materials` at that folder.
+**itslearning:** if the user wants material from itslearning, use the `itslearning` skill. It fetches files, slides and the plans' homework (`lektier.md`) and links them to the subject.
+
 Append to `materials.md` a section per source: `## <label>` with the key concepts, definitions, terms, examples and typical exam topics, compressed (about 1–3 KB per source). Then set `digested: true`. If a file can't be read, tell the user and skip it.
 
 ## Existing subject
@@ -70,6 +73,7 @@ Rules:
 - `questions_per_batch` questions, only `single`/`multi`. `correct` = exact indices into `options`. Vary the position of the correct answer (the page also shuffles).
 - **"For dummies":** ~1/3 (3–4 of 10) very simple basic questions, one concept each ("Hvad er en X?"), placed first. The rest are concrete scenario questions.
 - The language from config. Technical terms in English.
+- With homework (`[LEKTIE: …]` sections in `materials.md`, or `lektier.md`): every homework topic must be covered by questions over time, linked to the learning goals. Give priority to the most recent plans' homework.
 - With material: base a large share of the questions on `materials.md` (the course's own terminology and examples), and end the `explanation` with `Kilde: <label>` (e.g. "Kilde: Slides uge 3" or "Kilde: EIP-bogen"). Learning goals still determine WHAT is covered; the material determines HOW it is phrased.
 - Cover the learning goals broadly. Weight `focus_topics`/`wishes`. Topics answered wrong (`history.correct == false`) come back first.
 - Questions MAY come back, but never word for word: rephrase, new scenario, or another aspect.
