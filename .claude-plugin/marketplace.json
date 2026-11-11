@@ -1,0 +1,13 @@
+{
+  "name": "claude-quiz",
+  "owner": { "name": "RasmusRosengaard" },
+  "plugins": [
+    {
+      "name": "quiz",
+      "source": "./",
+      "description": "Studiequiz for et vilkårligt fag med læringsmål, out of scope og automatisk næste batch.",
+      "repository": "https://github.com/RasmusRosengaard/claude-quiz",
+      "license": "MIT"
+    }
+  ]
+}
