@@ -12,8 +12,8 @@ How it works: each subject has a folder with a fixed `quiz.html`, which loads `q
 Folders: `~/tools/quiz/_template/` (the template) and `~/tools/quiz/<slug>/` (per subject). Use `$HOME` and never hardcode a username.
 
 ## Bootstrap (ALWAYS first)
-Template version: **c06287d2**
-1. If `~/tools/quiz/_template/VERSION` does not contain `c06287d2`: write the 3 files from the **Appendix** byte for byte (Write tool, exact content between the `~~~~` fences) to `~/tools/quiz/_template/`, then write `c06287d2` to `VERSION`.
+Template version: **61bf6f70**
+1. If `~/tools/quiz/_template/VERSION` does not contain `61bf6f70`: write the 3 files from the **Appendix** byte for byte (Write tool, exact content between the `~~~~` fences) to `~/tools/quiz/_template/`, then write `61bf6f70` to `VERSION`.
 2. Existing subject folders with an older `quiz.html`/`open.sh`/`wait.sh`: copy the new ones over them. NEVER touch `config.json`, `goals.md`, `state.json`, `questions*.js` or `results/`.
 
 ## Arguments
@@ -163,7 +163,7 @@ const unoos = new Set(); // indices into Q.out_of_scope the user wants restored
 const KEY = Q ? `quiz:${Q.slug}:b${Q.batch_id}` : "";
 
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
-const fmt = s => esc(s).replace(/`([^`]+)`/g, "<code>$1</code>");
+const fmt = s => esc(s).replace(/`([^`]+)`/g, (_, c) => "<code>" + c + "</code>");
 const save = () => { try { localStorage.setItem(KEY, JSON.stringify({ status, unoos: [...unoos] })); } catch (e) {} };
 
 // Stable per-question shuffle: random order, identical across reloads.
